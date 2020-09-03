@@ -314,6 +314,7 @@ func serve(args []string) error {
 		serverConfig.SecOpts.Certificate,
 		cs.GetClientCertificate().Certificate,
 		signingIdentityBytes,
+		expirationLogger.Infof,
 		expirationLogger.Warnf, // This can be used to piggyback a metric event in the future
 		time.Now(),
 		time.AfterFunc,
@@ -616,6 +617,7 @@ func serve(args []string) error {
 		Resources:   lifecycleResources,
 		Cache:       lifecycleCache,
 		BuiltinSCCs: builtinSCCs,
+		UserRunsCC:  userRunsCC,
 	}
 
 	containerRuntime := &chaincode.ContainerRuntime{
@@ -874,7 +876,7 @@ func serve(args []string) error {
 	pb.RegisterEndorserServer(peerServer.Server(), auth)
 
 	// register the snapshot server
-	snapshotSvc := &snapshotgrpc.SnapshotService{LedgerGetter: peerInstance}
+	snapshotSvc := &snapshotgrpc.SnapshotService{LedgerGetter: peerInstance, ACLProvider: aclProvider}
 	pb.RegisterSnapshotServer(peerServer.Server(), snapshotSvc)
 
 	go func() {
